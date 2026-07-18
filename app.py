@@ -86,13 +86,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================
-# LOAD DATA
+# LOAD DATA - FIXED VERSION
 # ============================================
 @st.cache_data
 def load_data():
-    url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
-    df = pd.read_csv(url)
-    return df
+    # IBM HR Analytics Employee Attrition Dataset
+    url = "https://raw.githubusercontent.com/IBM/employee-attrition-aif360/master/data/employee_attrition.csv"
+    try:
+        df = pd.read_csv(url)
+        return df
+    except Exception as e:
+        st.error(f"⚠️ Failed to load data: {e}")
+        st.info("📌 Please check your internet connection or try again later.")
+        st.info("💡 The app requires the IBM HR Attrition Dataset to work properly.")
+        return None
 
 @st.cache_resource
 def train_all_models(X_train, X_test, y_train, y_test):
@@ -166,6 +173,10 @@ def train_all_models(X_train, X_test, y_train, y_test):
 # ============================================
 df = load_data()
 
+# Check if data loaded successfully
+if df is None:
+    st.stop()  # Stop the app if no data
+
 # Preprocessing
 le_dict = {}
 df_encoded = df.copy()
@@ -176,8 +187,12 @@ for col in categorical_cols:
     df_encoded[col] = le.fit_transform(df_encoded[col])
     le_dict[col] = le
 
-# Features and Target
+# Features and Target - Fixed column names for IBM dataset
+# The IBM dataset uses different column names
 drop_cols = ['Attrition', 'EmployeeCount', 'Over18', 'StandardHours', 'EmployeeNumber']
+# Only drop columns that exist in the dataframe
+drop_cols = [col for col in drop_cols if col in df_encoded.columns]
+
 X = df_encoded.drop(drop_cols, axis=1)
 y = df_encoded['Attrition']
 
@@ -496,7 +511,7 @@ elif page == "Data Insights":
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.markdown('<div class="metric-card"><div class="metric-value">1,470</div><div class="metric-label">Total Employees</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><div class="metric-value">{len(df)}</div><div class="metric-label">Total Employees</div></div>', unsafe_allow_html=True)
     with col2:
         att_rate = (df['Attrition'] == 'Yes').mean() * 100
         st.markdown(f'<div class="metric-card"><div class="metric-value">{att_rate:.1f}%</div><div class="metric-label">Attrition Rate</div></div>', unsafe_allow_html=True)
@@ -610,7 +625,7 @@ else:
     with col2:
         st.metric("Best Model AUC", f"{model_results[best_model_name]['roc_auc']:.1%}")
     with col3:
-        st.metric("Dataset Size", "1,470 employees")
+        st.metric("Dataset Size", f"{len(df)} employees")
 
 # ============================================
 # FOOTER
