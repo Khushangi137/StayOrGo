@@ -90,7 +90,7 @@ st.markdown("""
 # ============================================
 @st.cache_data
 def load_data():
-    url = "https://raw.githubusercontent.com/npradaschnor/IBM-HR-Analytics-Employee-Attrition/master/WA_Fn-UseC_-HR-Employee-Attrition.csv"
+    url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
     df = pd.read_csv(url)
     return df
 
